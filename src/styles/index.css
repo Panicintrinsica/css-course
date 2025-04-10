@@ -52,9 +52,9 @@ header {
 }
 
 
-// -------------------------- //
-// -------- Nav Menu -------- //
-// -------------------------- //
+/* -------------------------- */
+/* -------- Nav Menu -------- */
+/* -------------------------- */
 nav.cross-nav {
     display: flex;
     gap: 1rem;
@@ -76,7 +76,7 @@ nav > a {
     transition: background 0.2s ease-in-out;
 }
 
-a[data-page] {
+a[data-route] {
     padding: 0.5rem 1rem;
     background: linear-gradient(0, #58636e, blue);
     cursor: pointer;
@@ -84,7 +84,7 @@ a[data-page] {
     text-align: center;
 }
 
-a[data-page].active {
+a[data-route].active {
     color: var(--link-active);
     font-weight: 800;
     text-decoration: underline;

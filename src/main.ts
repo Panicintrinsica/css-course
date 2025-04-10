@@ -1,8 +1,7 @@
-// D:/demos/rpd/src/main.ts
-import './styles/index.scss';
+import './styles/index.css';
 
 // Import Content
-import currentPage from './pages/home.html?raw';
+
 import headerContent from './components/header.html?raw';
 import navContent from './components/nav.html?raw';
 import footerContent from './components/footer.html?raw';
@@ -28,14 +27,6 @@ if (navElement) {
     console.error('Navigation element not found.');
 }
 
-// Load Initial Page (Home)
-if (bodyElement) {
-    bodyElement.innerHTML = currentPage;
-    setActiveLink('home');
-} else {
-    console.error('Body element (#body) not found.');
-}
-
 // Load Footer
 if (footerElement) {
     footerElement.innerHTML = footerContent;
@@ -43,12 +34,27 @@ if (footerElement) {
     console.error('Footer element (#footer) not found.');
 }
 
+/**
+ * Handles routing based on the current URL.
+ */
+function handleRouting(): void {
+    if (!bodyElement) {
+        console.error('Body element (#body) not found. Cannot handle routing.');
+        return;
+    }
+
+    // Fix for the root path fallback to "home"
+    const path = window.location.pathname === '/' ? 'home' : window.location.pathname.replace(/^\//, ''); // Remove leading slash
+    const pageName = path.endsWith('/') ? path.slice(0, -1) : path; // Normalize trailing slashes
+
+    setPage(pageName);
+}
+
 
 // --- Page Loading Function ---
-
 /**
  * Fetches and loads the content of a page into the #body element.
- * @param pageName - The name of the page (e.g., 'home', 'about') corresponding to the HTML file.
+ * @param pageName - The name of the page (e.g., 'home', 'news') corresponding to the HTML file.
  */
 async function setPage(pageName: string): Promise<void> {
     if (!bodyElement) {
@@ -65,9 +71,7 @@ async function setPage(pageName: string): Promise<void> {
         const module = await import(`./pages/${pageName}.html?raw`);
         bodyElement.innerHTML = module.default;
 
-
         setActiveLink(pageName); // Update active link after loading
-
     } catch (error) {
         console.error('Error loading page:', error);
         bodyElement.innerHTML = `<p style="color: red;">Error loading page: ${pageName}.</p>`;
@@ -76,21 +80,24 @@ async function setPage(pageName: string): Promise<void> {
 }
 
 // --- Navigation Link Setup ---
-
 /**
  * Adds click event listeners to navigation links.
  */
 function setupNavLinks(): void {
-    const navLinks = navElement?.querySelectorAll<HTMLButtonElement>('[data-page]');
+    const navLinks = navElement?.querySelectorAll<HTMLButtonElement>('[data-route]');
     if (!navLinks) return;
 
     navLinks.forEach(link => {
         link.addEventListener('click', (event) => {
-            // Prevent default if it was an anchor <a>, useful for buttons too
             event.preventDefault();
-            const page = link.getAttribute('data-page');
+            const page = link.getAttribute('data-route');
             if (page) {
-                setPage(page);
+                // Update the browser history and handle routing
+                window.history.pushState({}, '', `/${page}`);
+                handleRouting();
+            } else {
+                window.history.pushState({}, '', `/${page}`);
+                handleRouting();
             }
         });
     });
@@ -101,17 +108,41 @@ function setupNavLinks(): void {
  * @param activePage - The name of the currently active page, or null to clear.
  */
 function setActiveLink(activePage: string | null): void {
-    const navLinks = navElement?.querySelectorAll<HTMLButtonElement>('[data-page]');
+    const navLinks = navElement?.querySelectorAll<HTMLButtonElement>('[data-route]');
     if (!navLinks) return;
 
+    let foundMatch = false;
+
     navLinks.forEach(link => {
-        const page = link.getAttribute('data-page');
+        const page = link.getAttribute('data-route');
         if (page === activePage) {
             link.classList.add('active'); // Add your active class style in CSS/SCSS
             link.setAttribute('aria-current', 'page'); // Accessibility improvement
+            foundMatch = true;
         } else {
             link.classList.remove('active');
             link.removeAttribute('aria-current');
         }
     });
+
+    // If no exact match is found, activate the links with an empty data-route
+    if (!foundMatch) {
+        navLinks.forEach(link => {
+            const page = link.getAttribute('data-route');
+            if (page === '') {
+                link.classList.add('active');
+                link.setAttribute('aria-current', 'page');
+            }
+        });
+    }
 }
+
+
+// --- Initialize Routing ---
+/**
+ * Ensures routing works with back/forward browser history actions.
+ */
+window.addEventListener('popstate', handleRouting);
+
+// Load the initial page based on the URL
+handleRouting();
