@@ -17,6 +17,21 @@ body {
     margin: auto;
 }
 
+#body {
+    flex-grow: 1;
+}
+
+footer {
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+footer > address {
+    flex-grow: 1;
+}
+
 header {
     display: flex;
     gap: 1rem;
@@ -35,6 +50,7 @@ header {
 .fill {
     flex-grow: 1;
 }
+
 
 // -------------------------- //
 // -------- Nav Menu -------- //
